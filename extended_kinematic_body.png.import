@@ -4,6 +4,10 @@ importer="texture"
 type="StreamTexture"
 path="res://.import/extended_kinematic_body.png-a4bdacecda4f9aa87cc067e5ce5be570.stex"
 
+[deps]
+
+source_md5="ff74490619ada5641207153cf0011b87"
+
 [params]
 
 compress/mode=0
