@@ -10,7 +10,7 @@ export(float) var slope_max_angle = deg2rad(45)
 
 var is_grounded = false
 
-onready var step_ray_exclusion_array = [self]
+onready var exclusion_array = [self]
 
 static func get_sphere_query_parameters(p_transform, p_radius, p_mask, p_exclude):
 	var query = PhysicsShapeQueryParameters.new()
@@ -40,7 +40,6 @@ func extended_move(p_motion, p_slide_attempts):
 	var dss = PhysicsServer.space_get_direct_state(get_world().get_space())
 	var motion = Vector3(0.0, 0.0, 0.0)
 	if(dss):
-		var exclude_array = [self]
 		var shape_owners = get_shape_owners()
 		if(shape_owners.size() == 1):
 			var shape_count = shape_owner_get_shape_count(shape_owners[0])
@@ -74,7 +73,7 @@ func extended_move(p_motion, p_slide_attempts):
 							motion = (up * -step_height)
 							
 							# Use raycast from just above the kinematic result to determine the world normal of the collided surface
-							var ray_result = dss.intersect_ray(step_down_kinematic_result.position + (up * step_height), step_down_kinematic_result.position, [self])
+							var ray_result = dss.intersect_ray(step_down_kinematic_result.position + (up * step_height), step_down_kinematic_result.position, exclusion_array)
 							
 							# Use it to verify whether it is a slope
 							if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
@@ -120,7 +119,7 @@ func extended_move(p_motion, p_slide_attempts):
 									is_grounded = false
 								else: 
 									if !test_slope(kinematic_collision.normal, up, slope_max_angle):
-										var ray_result = dss.intersect_ray(global_transform.origin, global_transform.origin - (up * step_height), [self])
+										var ray_result = dss.intersect_ray(global_transform.origin, global_transform.origin - (up * step_height), exclusion_array)
 										if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
 											is_grounded = false
 							else:
