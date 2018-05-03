@@ -56,7 +56,7 @@ func extended_move(p_motion, p_slide_attempts):
 						var step_up_transform = global_transform
 						
 						# Do actual motion
-						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle)
+						motion = move_and_slide(p_motion, up, true, slope_stop_min_velocity, p_slide_attempts, slope_max_angle)
 						
 						# Return to ground
 						var step_down_kinematic_result = null
@@ -105,7 +105,7 @@ func extended_move(p_motion, p_slide_attempts):
 						else:
 							# Process step down / fall
 							virtual_step_offset = 0.0
-							var collided = test_move(global_transform, -(up * step_height))
+							var collided = test_move(global_transform, -(up * step_height), true)
 							if(collided):
 								var kinematic_collision = move_and_collide(-(up * anti_bump_factor))
 								if !kinematic_collision:
@@ -125,7 +125,7 @@ func extended_move(p_motion, p_slide_attempts):
 							else:
 								is_grounded = false
 					else:
-						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle)
+						motion = move_and_slide(p_motion, up, true, slope_stop_min_velocity, p_slide_attempts, slope_max_angle)
 						if is_on_floor():
 							is_grounded = true
 				else:
@@ -136,7 +136,7 @@ func extended_move(p_motion, p_slide_attempts):
 	return motion
 			
 func _enter_tree():
-	var collided = test_move(global_transform, -(up * anti_bump_factor))
+	var collided = test_move(global_transform, -(up * anti_bump_factor), true)
 	if collided:
 		var motion_collision = move_and_collide(up * -anti_bump_factor)
 		is_grounded = true
