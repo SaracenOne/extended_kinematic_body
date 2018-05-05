@@ -73,7 +73,7 @@ func extended_move(p_motion, p_slide_attempts):
 							motion = (up * -step_height)
 							
 							# Use raycast from just above the kinematic result to determine the world normal of the collided surface
-							var ray_result = dss.intersect_ray(step_down_kinematic_result.position + (up * step_height), step_down_kinematic_result.position, exclusion_array)
+							var ray_result = dss.intersect_ray(step_down_kinematic_result.position + (up * step_height), step_down_kinematic_result.position - (up * anti_bump_factor), exclusion_array)
 							
 							# Use it to verify whether it is a slope
 							if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
@@ -119,7 +119,7 @@ func extended_move(p_motion, p_slide_attempts):
 									is_grounded = false
 								else: 
 									if !test_slope(kinematic_collision.normal, up, slope_max_angle):
-										var ray_result = dss.intersect_ray(global_transform.origin, global_transform.origin - (up * step_height), exclusion_array)
+										var ray_result = dss.intersect_ray(kinematic_collision.position + (up * step_height), kinematic_collision.position - (up * step_height), exclusion_array)
 										if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
 											is_grounded = false
 							else:
