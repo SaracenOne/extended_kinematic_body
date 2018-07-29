@@ -56,7 +56,7 @@ func extended_move(p_motion, p_slide_attempts):
 						var step_up_transform = global_transform
 						
 						# Do actual motion
-						motion = move_and_slide(p_motion, up, true, slope_stop_min_velocity, p_slide_attempts, slope_max_angle)
+						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle, true)
 						
 						# Return to ground
 						var step_down_kinematic_result = null
@@ -125,7 +125,7 @@ func extended_move(p_motion, p_slide_attempts):
 							else:
 								is_grounded = false
 					else:
-						motion = move_and_slide(p_motion, up, true, slope_stop_min_velocity, p_slide_attempts, slope_max_angle)
+						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle, true)
 						if is_on_floor():
 							is_grounded = true
 				else:
