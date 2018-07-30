@@ -36,6 +36,34 @@ static func test_slope(p_normal, p_up, p_slope_max_angle):
 func get_virtual_step_offset():
 	return virtual_step_offset
 	
+func _step_down(p_dss):
+	# Process step down / fall
+	virtual_step_offset = 0.0
+	var collided = test_move(global_transform, -(up * step_height), true)
+	if(collided):
+		var kinematic_collision = move_and_collide(-(up * anti_bump_factor))
+		if !kinematic_collision:
+			kinematic_collision = move_and_collide(-(up * (step_height - anti_bump_factor)))
+			if kinematic_collision:
+				virtual_step_offset = kinematic_collision.get_travel().length() + anti_bump_factor
+			else:
+				virtual_step_offset = step_height
+				
+		if !kinematic_collision:
+			is_grounded = false
+		else: 
+			if !test_slope(kinematic_collision.normal, up, slope_max_angle):
+				# Is the collision slope relative to world space?
+				var ray_result = p_dss.intersect_ray(kinematic_collision.position + (up * step_height), kinematic_collision.position - (up * step_height), exclusion_array)
+				if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
+					is_grounded = false
+				# Is there valid floor beneath me?
+				ray_result = p_dss.intersect_ray(global_transform.origin, global_transform.origin - (up * step_height * 2.0), exclusion_array)
+				if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
+					is_grounded = false
+	else:
+		is_grounded = false
+	
 func extended_move(p_motion, p_slide_attempts):
 	var dss = PhysicsServer.space_get_direct_state(get_world().get_space())
 	var motion = Vector3(0.0, 0.0, 0.0)
@@ -103,31 +131,12 @@ func extended_move(p_motion, p_slide_attempts):
 							else:
 								move_and_collide(motion)
 						else:
-							# Process step down / fall
-							virtual_step_offset = 0.0
-							var collided = test_move(global_transform, -(up * step_height), true)
-							if(collided):
-								var kinematic_collision = move_and_collide(-(up * anti_bump_factor))
-								if !kinematic_collision:
-									kinematic_collision = move_and_collide(-(up * (step_height - anti_bump_factor)))
-									if kinematic_collision:
-										virtual_step_offset = kinematic_collision.get_travel().length() + anti_bump_factor
-									else:
-										virtual_step_offset = step_height
-										
-								if !kinematic_collision:
-									is_grounded = false
-								else: 
-									if !test_slope(kinematic_collision.normal, up, slope_max_angle):
-										var ray_result = dss.intersect_ray(kinematic_collision.position + (up * step_height), kinematic_collision.position - (up * step_height), exclusion_array)
-										if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
-											is_grounded = false
-							else:
-								is_grounded = false
+							_step_down(dss)
 					else:
-						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle, true)
+						motion = move_and_slide(p_motion, up, 0.0, p_slide_attempts, 1.0, true)
 						if is_on_floor():
 							is_grounded = true
+							_step_down(dss)
 				else:
 					printerr("extended_kinematic_body collider must be a capsule")
 		else:
