@@ -36,15 +36,24 @@ static func test_slope(p_normal, p_up, p_slope_max_angle):
 func get_virtual_step_offset():
 	return virtual_step_offset
 	
+func _is_valid_kinematic_collision(p_collision):
+	if p_collision == null:
+		return false
+	else:
+		if p_collision.remainder.length() > 0.00001 == false:
+			return false
+			
+	return true
+	
 func _step_down(p_dss):
 	# Process step down / fall
 	virtual_step_offset = 0.0
 	var collided = test_move(global_transform, -(up * step_height), true)
 	if(collided):
 		var kinematic_collision = move_and_collide(-(up * anti_bump_factor))
-		if !kinematic_collision:
+		if !_is_valid_kinematic_collision(kinematic_collision):
 			kinematic_collision = move_and_collide(-(up * (step_height - anti_bump_factor)))
-			if kinematic_collision:
+			if _is_valid_kinematic_collision(kinematic_collision):
 				virtual_step_offset = kinematic_collision.get_travel().length() + anti_bump_factor
 			else:
 				virtual_step_offset = step_height
@@ -96,7 +105,7 @@ func extended_move(p_motion, p_slide_attempts):
 							virtual_step_offset = -step_up_kinematic_result.get_travel().length()
 							step_down_kinematic_result = move_and_collide((up * -step_height) + step_up_kinematic_result.remainder)
 							
-						if step_down_kinematic_result:
+						if _is_valid_kinematic_collision(step_down_kinematic_result):
 							virtual_step_offset += step_down_kinematic_result.get_travel().length()
 							motion = (up * -step_height)
 							
@@ -107,7 +116,7 @@ func extended_move(p_motion, p_slide_attempts):
 							if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
 								var slope_limit_fix = 2
 								while(slope_limit_fix > 0):
-									if step_down_kinematic_result:
+									if _is_valid_kinematic_collision(step_down_kinematic_result):
 										var step_down_normal = step_down_kinematic_result.normal
 										
 										# If you are now on a valid surface, break the loop
@@ -121,7 +130,7 @@ func extended_move(p_motion, p_slide_attempts):
 											var slide_down_result = move_and_collide(motion)
 											
 											# Accumulate this back into the visual step offset
-											if slide_down_result:
+											if _is_valid_kinematic_collision(slide_down_result):
 												virtual_step_offset += slide_down_result.get_travel().length()
 											else:
 												virtual_step_offset = 0.0
