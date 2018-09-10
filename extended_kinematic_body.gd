@@ -83,14 +83,9 @@ func extended_move(p_motion, p_slide_attempts):
 			if shape_count == 1:
 				var shape = shape_owner_get_shape(shape_owners[0], 0)
 				if(shape is CapsuleShape):
-					var capsule_radius = shape.get_radius()
 					if(is_grounded):
-						# Initial transform
-						var initial_transform = global_transform
-						
 						# Raise off the ground
 						var step_up_kinematic_result = move_and_collide(up * step_height)
-						var step_up_transform = global_transform
 						
 						# Do actual motion
 						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle, true)
@@ -138,7 +133,8 @@ func extended_move(p_motion, p_slide_attempts):
 										break
 									slope_limit_fix -= 1
 							else:
-								move_and_collide(motion)
+								if move_and_collide(motion) == null:
+									is_grounded = false
 						else:
 							_step_down(dss)
 					else:
@@ -157,4 +153,5 @@ func _enter_tree():
 	var collided = test_move(global_transform, -(up * anti_bump_factor), true)
 	if collided:
 		var motion_collision = move_and_collide(up * -anti_bump_factor)
-		is_grounded = true
+		if motion_collision:
+			is_grounded = true

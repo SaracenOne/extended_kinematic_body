@@ -7,16 +7,14 @@ path="res://.import/icon_extended_kinematic_body.svg-62ddcc39322c81b61b10b783002
 [deps]
 
 source_file="res://addons/extended_kinematic_body/icon_extended_kinematic_body.svg"
-source_md5="59b45fdb1a551fc88f529878e83d7c4b"
-
 dest_files=[ "res://.import/icon_extended_kinematic_body.svg-62ddcc39322c81b61b10b78300256d96.stex" ]
-dest_md5="5782c4c2a2030ac65dcdbd2247430419"
 
 [params]
 
 compress/mode=0
 compress/lossy_quality=0.7
 compress/hdr_mode=0
+compress/bptc_ldr=0
 compress/normal_map=0
 flags/repeat=0
 flags/filter=true
@@ -26,6 +24,7 @@ flags/srgb=2
 process/fix_alpha_border=true
 process/premult_alpha=false
 process/HDR_as_SRGB=false
+process/invert_color=false
 stream=false
 size_limit=0
 detect_3d=true
