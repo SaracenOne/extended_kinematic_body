@@ -7,6 +7,7 @@ export(float) var step_height = 0.2
 export(float) var anti_bump_factor = 0.75
 export(float) var slope_stop_min_velocity = 0.05
 export(float) var slope_max_angle = deg2rad(45)
+export(bool) var infinite_interia = false
 
 var is_grounded = false
 
@@ -48,11 +49,11 @@ func _is_valid_kinematic_collision(p_collision):
 func _step_down(p_dss):
 	# Process step down / fall
 	virtual_step_offset = 0.0
-	var collided = test_move(global_transform, -(up * step_height), true)
+	var collided = test_move(global_transform, -(up * step_height), infinite_interia)
 	if(collided):
-		var kinematic_collision = move_and_collide(-(up * anti_bump_factor))
+		var kinematic_collision = move_and_collide(-(up * anti_bump_factor), infinite_interia)
 		if !_is_valid_kinematic_collision(kinematic_collision):
-			kinematic_collision = move_and_collide(-(up * (step_height - anti_bump_factor)))
+			kinematic_collision = move_and_collide(-(up * (step_height - anti_bump_factor)), infinite_interia)
 			if _is_valid_kinematic_collision(kinematic_collision):
 				virtual_step_offset = kinematic_collision.get_travel().length() + anti_bump_factor
 			else:
@@ -63,11 +64,11 @@ func _step_down(p_dss):
 		else: 
 			if !test_slope(kinematic_collision.normal, up, slope_max_angle):
 				# Is the collision slope relative to world space?
-				var ray_result = p_dss.intersect_ray(kinematic_collision.position + (up * step_height), kinematic_collision.position - (up * step_height), exclusion_array)
+				var ray_result = p_dss.intersect_ray(kinematic_collision.position + (up * step_height), kinematic_collision.position - (up * step_height), exclusion_array, collision_mask)
 				if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
 					is_grounded = false
 				# Is there valid floor beneath me?
-				ray_result = p_dss.intersect_ray(global_transform.origin, global_transform.origin - (up * step_height * 2.0), exclusion_array)
+				ray_result = p_dss.intersect_ray(global_transform.origin, global_transform.origin - (up * step_height * 2.0), exclusion_array, collision_mask)
 				if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
 					is_grounded = false
 	else:
@@ -85,27 +86,27 @@ func extended_move(p_motion, p_slide_attempts):
 				if(shape is CapsuleShape):
 					if(is_grounded):
 						# Raise off the ground
-						var step_up_kinematic_result = move_and_collide(up * step_height)
+						var step_up_kinematic_result = move_and_collide(up * step_height, infinite_interia)
 						
 						# Do actual motion
-						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle, true)
+						motion = move_and_slide(p_motion, up, slope_stop_min_velocity, p_slide_attempts, slope_max_angle, infinite_interia)
 						
 						# Return to ground
 						var step_down_kinematic_result = null
 						
 						if step_up_kinematic_result == null:
 							virtual_step_offset = -step_height
-							step_down_kinematic_result = move_and_collide(up * -step_height)
+							step_down_kinematic_result = move_and_collide(up * -step_height, infinite_interia)
 						else:
 							virtual_step_offset = -step_up_kinematic_result.get_travel().length()
-							step_down_kinematic_result = move_and_collide((up * -step_height) + step_up_kinematic_result.remainder)
+							step_down_kinematic_result = move_and_collide((up * -step_height) + step_up_kinematic_result.remainder, infinite_interia)
 							
 						if _is_valid_kinematic_collision(step_down_kinematic_result):
 							virtual_step_offset += step_down_kinematic_result.get_travel().length()
 							motion = (up * -step_height)
 							
 							# Use raycast from just above the kinematic result to determine the world normal of the collided surface
-							var ray_result = dss.intersect_ray(step_down_kinematic_result.position + (up * step_height), step_down_kinematic_result.position - (up * anti_bump_factor), exclusion_array)
+							var ray_result = dss.intersect_ray(step_down_kinematic_result.position + (up * step_height), step_down_kinematic_result.position - (up * anti_bump_factor), exclusion_array, collision_mask)
 							
 							# Use it to verify whether it is a slope
 							if(ray_result.empty() or !test_slope(ray_result.normal, up, slope_max_angle)):
@@ -118,11 +119,11 @@ func extended_move(p_motion, p_slide_attempts):
 										if test_slope(step_down_normal, up, slope_max_angle):
 											break
 										else:
-											#move_and_collide(motion) # Is this needed?
+											#move_and_collide(motion, infinite_interia) # Is this needed?
 											
 											# Use the step down normal to slide down to the ground
 											motion = motion.slide(step_down_normal)
-											var slide_down_result = move_and_collide(motion)
+											var slide_down_result = move_and_collide(motion, infinite_interia)
 											
 											# Accumulate this back into the visual step offset
 											if _is_valid_kinematic_collision(slide_down_result):
@@ -133,12 +134,12 @@ func extended_move(p_motion, p_slide_attempts):
 										break
 									slope_limit_fix -= 1
 							else:
-								if move_and_collide(motion) == null:
+								if move_and_collide(motion, infinite_interia) == null:
 									is_grounded = false
 						else:
 							_step_down(dss)
 					else:
-						motion = move_and_slide(p_motion, up, 0.0, p_slide_attempts, 1.0, true)
+						motion = move_and_slide(p_motion, up, 0.0, p_slide_attempts, 1.0, infinite_interia)
 						if is_on_floor():
 							is_grounded = true
 							_step_down(dss)
@@ -150,8 +151,8 @@ func extended_move(p_motion, p_slide_attempts):
 	return motion
 			
 func _enter_tree():
-	var collided = test_move(global_transform, -(up * anti_bump_factor), true)
+	var collided = test_move(global_transform, -(up * anti_bump_factor), infinite_interia)
 	if collided:
-		var motion_collision = move_and_collide(up * -anti_bump_factor)
+		var motion_collision = move_and_collide(up * -anti_bump_factor, infinite_interia)
 		if motion_collision:
 			is_grounded = true
