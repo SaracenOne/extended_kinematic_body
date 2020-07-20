@@ -41,7 +41,7 @@ func _is_valid_kinematic_collision(p_collision):
 	if p_collision == null:
 		return false
 	else:
-		if p_collision.remainder.length() > 0.00001 == false:
+		if !p_collision.remainder.length() > 0.00001:
 			return false
 			
 	return true
