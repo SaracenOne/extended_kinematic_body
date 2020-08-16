@@ -2,6 +2,16 @@ tool
 extends EditorPlugin
 
 
+func _init():
+	print("Initialising ExtendedKinematicBody plugin")
+
+
+func _notification(p_notification: int):
+	match p_notification:
+		NOTIFICATION_PREDELETE:
+			print("Destroying ExtendedKinematicBody plugin")
+
+
 func get_name() -> String:
 	return "ExtendedKinematicBody"
 
